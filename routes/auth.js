@@ -55,7 +55,7 @@ router.post('/driver-login', async (req, res) => {
 // FIX 2: Removed the duplicate, unprotected /driver-dashboard route that was here.
 router.get('/driver-dashboard', isAuthenticated, async (req, res) => {
     try {
-      let driver = await Drivers.findById(req.session.DriversId).populate('agencyId','Vehicle');
+      let driver = await Drivers.findById(req.session.DriversId).populate('agencyId');
         
         if (!driver) {
             // FIX 3: Use res.redirect here as well
@@ -78,4 +78,5 @@ router.get('/logout', (req, res) => {
         res.render('login');
     });
 });
+
 module.exports = router;
