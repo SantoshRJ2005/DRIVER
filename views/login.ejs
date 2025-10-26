@@ -1,0 +1,10 @@
+<h2> Welcome to Driver Login Page</h2>
+<% if(typeof message !== 'undefined' && message) { %>
+    <p style='color: red;'><%= message %></p>
+<% } %>
+
+<form action="/driver-login" method="POST">
+    Email<input type='email' name='email' required><br>
+    Password:<input type='password' name='password' required><br>
+    <button type='submit'> Login</button>
+</form>

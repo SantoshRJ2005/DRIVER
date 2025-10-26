@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<!-- Add data-theme="light" by default. JS will manage this. -->
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Dashboard - SharingYatra</title>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <style>
+        /* --- CSS Variables for Theming --- */
+        :root {
+            --primary-color: #0a4d68;    /* Dark Blue */
+            --secondary-color: #ff6b6b; /* Accent Red */
+            --gradient-start: #0a4d68;
+            --gradient-end: #1a7fa3;
+            
+            /* Light Theme */
+            --bg-page: #f4f7f6;
+            --bg-surface: #ffffff;
+            --bg-inset: #f0f4f3;
+            --text-primary: #1a202c;
+            --text-secondary: #555;
+            --border-color: #e2e8f0;
+            --shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+            
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #cbd5e1;
+            --sidebar-text-hover: #ffffff;
+            --sidebar-bg-hover: #334155;
+            --sidebar-bg-active: var(--secondary-color);
+            --sidebar-text-active: #ffffff;
+        }
+
+        /* Dark Theme */
+        html[data-theme="dark"] {
+            --primary-color: #1a7fa3;    /* Lighter Blue for dark mode */
+            --secondary-color: #ff6b6b;
+            --gradient-start: #1a7fa3;
+            --gradient-end: #2a9fc3;
+
+            --bg-page: #121212;
+            --bg-surface: #1e1e1e;
+            --bg-inset: #2c2c2c;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --border-color: #3a3a3a;
+            --shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+
+            --sidebar-bg: #1a1a1a;
+            --sidebar-text: #a0a0a0;
+            --sidebar-text-hover: #e0e0e0;
+            --sidebar-bg-hover: #2c2c2c;
+            --sidebar-bg-active: var(--secondary-color);
+            --sidebar-text-active: #121212;
+        }
+
+        /* --- Basic Setup & Typography --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* Smooth transitions for theme changes */
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+        }
+
+        /* --- Main Layout (Sidebar + Content) --- */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            width: 250px;
+            flex-shrink: 0;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .sidebar-header .fa-route {
+            color: var(--secondary-color);
+        }
+
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            padding: 0.85rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .sidebar-nav a .fa-solid {
+            width: 20px;
+            text-align: center;
+        }
+        .sidebar-nav a:hover {
+            background-color: var(--sidebar-bg-hover);
+            color: var(--sidebar-text-hover);
+        }
+        .sidebar-nav a.active {
+            background-color: var(--sidebar-bg-active);
+            color: var(--sidebar-text-active);
+            font-weight: 600;
+        }
+        
+        .sidebar-nav .logout {
+            margin-top: auto; /* Pushes logout to the bottom */
+        }
+
+        /* --- Main Content Area --- */
+        .main-content {
+            flex-grow: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        /* --- Header Bar (New) --- */
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .main-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        #menu-toggle {
+            display: none; /* Hidden on desktop */
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* --- Modern Profile Card --- */
+        .profile-card {
+            /* Frosted glass effect */
+            background: var(--bg-surface);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden; /* Ensures header corners are rounded */
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+        }
+        
+        .profile-header .header-icon {
+            font-size: 3rem;
+            opacity: 0.8;
+        }
+
+        .profile-header h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .profile-header p {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        /* --- Responsive Details Grid --- */
+        .profile-body {
+            padding: 2rem;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background-color: var(--bg-inset);
+            padding: 1.25rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .detail-item:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow);
+        }
+
+        .detail-item .icon {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            width: 30px;
+            text-align: center;
+        }
+
+        .detail-item .text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-item .label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .detail-item .value {
+            font-size: 1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        /* --- Theme Toggle Switch --- */
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 28px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+        /* Sun/Moon icons inside the toggle */
+        .slider .fa-sun, .slider .fa-moon {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            color: #fff;
+            transition: opacity 0.3s ease;
+        }
+        .slider .fa-sun {
+            left: 6px;
+            opacity: 1;
+        }
+        .slider .fa-moon {
+            right: 6px;
+            opacity: 0;
+        }
+        input:checked + .slider .fa-sun {
+            opacity: 0;
+        }
+        input:checked + .slider .fa-moon {
+            opacity: 1;
+        }
+
+        /* --- Mobile Overlay --- */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.open {
+            display: block;
+        }
+        
+        /* --- MOBILE RESPONSIVENESS --- */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                z-index: 1000;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+                box-shadow: 0 0 40px rgba(0,0,0,0.5);
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            #menu-toggle {
+                display: block;
+            }
+            
+            .main-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+                padding: 1.5rem;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Overlay for mobile menu -->
+    <div class="sidebar-overlay"></div>
+
+    <div class="dashboard-container">
+        
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-route"></i>
+                <span>SharingYatra</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/driver-rides"><i class="fa-solid fa-route"></i> View Rides</a>
+
+                <a href="#"><i class="fa-solid fa-car"></i> Manage Vehicles</a>
+                <a href="#"><i class="fa-solid fa-money-bill-wave"></i> Earnings</a>
+                 <a href="#"><i class="fa-solid fa-envelope icon"></i> Inbox</a>
+                <a href="#"><i class="fa-solid fa-bullhorn"></i> Complaint</a>
+                <a href="#" class="active"><i class="fa-solid fa-user"></i> Profile</a>
+                <a href='/logout' class="logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Driver Profile</h1>
+                <div class="header-controls">
+                    <!-- Theme Toggle -->
+                    <label class="theme-switch" title="Toggle theme">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider">
+                            <i class="fa-solid fa-sun"></i>
+                            <i class="fa-solid fa-moon"></i>
+                        </span>
+                    </label>
+                    
+                    <!-- Hamburger Menu Button -->
+                    <button id="menu-toggle" title="Open menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <div class="profile-card">
+                <div class="profile-header">
+                    <i class="fa-solid fa-user-tie header-icon"></i>
+                    <div class="header-text">
+                        <!-- Using placeholders for EJS tags as they won't render here -->
+                        <h2><%= drivers.fullName %></h2> <!-- <%= drivers.fullName %> -->
+                        <p>Welcome to Your Driver Profile</p>
+                    </div>
+                </div>
+        
+                <div class="profile-body">
+                    <div class="details-grid">
+                        
+                        <div class="detail-item">
+                            <i class="fa-solid fa-user icon"></i>
+                            <div class="text">
+                                <span class="label">Driver Name</span>
+                                <span class="value"> <%= drivers.fullName %> </span> <!-- <%= drivers.fullName %> -->
+                            </div>
+                        </div>
+        
+                        <div class="detail-item">
+                            <i class="fa-solid fa-envelope icon"></i>
+                            <div class="text">
+                                <span class="label">Email Address</span>
+                                <span class="value"> <%= drivers.email %> </span> <!-- <%= drivers.email %> -->
+                            </div>
+                        </div>
+        
+                        <div class="detail-item">
+                            <i class="fa-solid fa-phone icon"></i>
+                            <div class="text">
+                                <span class="label">Mobile Number</span>
+                                <span class="value"> <%= drivers.mobile || 'Not Provided' %> </span> 
+                            </div>
+                        </div>
+
+                         <div class="detail-item">
+                            <i class="fa-solid fa-phone icon"></i>
+                            <div class="text">
+                                <span class="label">Address</span>
+                                <span class="value"> <%= drivers.address || 'Not Provided' %> </span> 
+                            </div>
+                        </div>
+        
+                        <div class="detail-item">
+                            <i class="fa-solid fa-id-card icon"></i>
+                            <div class="text">
+                                <span class="label">License Number</span>
+                                <span class="value"><%= drivers.licenseNumber || 'Not Provided' %> </span> <!-- <%= drivers.licenseNumber || 'Not Provided' %> -->
+                            </div>
+                        </div>
+
+
+                       <div class="detail-item">
+    <i class="fa-solid fa-building icon"></i> <div class="text">
+        <span class="label">Partner Agency</span>
+        <span class="value">
+            <% if (drivers.agencyId && drivers.agencyId.agencyName) { %>
+                <%= drivers.agencyId.agencyName %>
+            <% } else { %>
+                Not Provided
+            <% } %>
+        </span>
+    </div>
+</div>
+
+
+  
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+    </div> 
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            const sidebarOverlay = document.querySelector('.sidebar-overlay');
+            const themeToggle = document.getElementById('theme-toggle');
+
+            // --- Mobile Menu Toggle ---
+            if (menuToggle && sidebar && sidebarOverlay) {
+                menuToggle.addEventListener('click', () => {
+                    sidebar.classList.add('open');
+                    sidebarOverlay.classList.add('open');
+                });
+
+                sidebarOverlay.addEventListener('click', () => {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.remove('open');
+                });
+            }
+
+            // --- Theme Toggle ---
+            if (themeToggle) {
+                // 1. Check for saved theme in localStorage
+                const currentTheme = localStorage.getItem('theme');
+                if (currentTheme) {
+                    document.documentElement.setAttribute('data-theme', currentTheme);
+                    
+                    if (currentTheme === 'dark') {
+                        themeToggle.checked = true;
+                    }
+                }
+
+                // 2. Add listener for changes
+                themeToggle.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        document.documentElement.setAttribute('data-theme', 'dark');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        document.documentElement.setAttribute('data-theme', 'light');
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
