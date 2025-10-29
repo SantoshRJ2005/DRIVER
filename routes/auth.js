@@ -109,7 +109,7 @@ router.get('/driver-rides', isAuthenticated, async (req, res) => {
     try {
         console.log('Logged-in Driver ID:', req.session.DriversId);
         const driverObjectId = new mongoose.Types.ObjectId(req.session.DriversId);
-        let allRides = await Booking.find({ driverID: driverObjectId })
+        let allRides = await Booking.find({ driverID: driverObjectId , status: { $ne: "completed" }})
             .populate('agencyId', 'agencyName')
             .populate('vehicleId','vehicle_name')
             .sort({ createdAt: -1 });
@@ -121,6 +121,25 @@ router.get('/driver-rides', isAuthenticated, async (req, res) => {
     }
 });
 
+
+
+
+router.get('/driver-history', isAuthenticated, async (req, res) => {
+    // ... [NO CHANGES TO THIS ROUTE] ...
+    try {
+        console.log('Logged-in Driver ID:', req.session.DriversId);
+        const driverObjectId = new mongoose.Types.ObjectId(req.session.DriversId);
+        let allRides = await Booking.find({ driverID: driverObjectId , status: { $eq: "completed" }})
+            .populate('agencyId', 'agencyName')
+            .populate('vehicleId','vehicle_name')
+            .sort({ createdAt: -1 });
+        console.log('Rides found in database:', allRides.length); 
+        res.render('driver-history', { rides: allRides });
+    } catch (err) {
+        console.error("Error fetching driver for rides", err);
+        res.status(500).send("Error Loading your rides");
+    }
+});
 
 // --- OTP ROUTES ---
 
