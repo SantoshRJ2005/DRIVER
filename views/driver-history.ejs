@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Rides - SharingYatra</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <style>
+        /* --- [PREVIOUS CSS... NO CHANGES] ---  Driver Hisory page*/ 
+        :root { 
+            --primary-color: #0a4d68; 
+            --secondary-color: #ff6b6b;
+            --gradient-start: #0a4d68;
+            --gradient-end: #1a7fa3;
+            --bg-page: #f4f7f6;
+            --bg-surface: #ffffff;
+            --bg-inset: #f0f4f3;
+            --text-primary: #1a202c;
+            --text-secondary: #555;
+            --border-color: #e2e8f0;
+            --shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #cbd5e1;
+            --sidebar-text-hover: #ffffff;
+            --sidebar-bg-hover: #334155;
+            --sidebar-bg-active: var(--secondary-color);
+            --sidebar-text-active: #ffffff;
+        }
+        html[data-theme="dark"] {
+            --primary-color: #1a7fa3; 
+            --secondary-color: #ff6b6b;
+            --gradient-start: #1a7fa3;
+            --gradient-end: #2a9fc3;
+            --bg-page: #121212;
+            --bg-surface: #1e1e1e;
+            --bg-inset: #2c2c2c;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --border-color: #3a3a3a;
+            --shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            --sidebar-bg: #1a1a1a;
+            --sidebar-text: #a0a0a0;
+            --sidebar-text-hover: #e0e0e0;
+            --sidebar-bg-hover: #2c2c2c;
+            --sidebar-bg-active: var(--secondary-color);
+            --sidebar-text-active: #121212;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+        }
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 250px;
+            flex-shrink: 0;
+            background-color: var(--sidebar-bg);
+            color: var(--sidebar-text);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-header {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .sidebar-header .fa-route {
+            color: var(--secondary-color);
+        }
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--sidebar-text);
+            text-decoration: none;
+            padding: 0.85rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .sidebar-nav a .fa-solid {
+            width: 20px;
+            text-align: center;
+        }
+        .sidebar-nav a:hover {
+            background-color: var(--sidebar-bg-hover);
+            color: var(--sidebar-text-hover);
+        }
+        .sidebar-nav a.active {
+            background-color: var(--sidebar-bg-active);
+            color: var(--sidebar-text-active);
+            font-weight: 600;
+        }
+        .sidebar-nav .logout {
+            margin-top: auto;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .main-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        #menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .ride-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .ride-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+        .ride-card:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        .ride-card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+        .ride-card-header h3 {
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            margin: 0;
+            word-break: break-word;
+        }
+        .ride-card-header .status {
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .ride-card-header .status-pending { background-color: #f59e0b; }
+        .ride-card-header .status-approved { background-color: #28a745; }
+        .ride-card-header .status-completed { background-color: #10b981; }
+        .ride-card-header .status-cancelled { background-color: #ef4444; }
+        .ride-card-header .status-confirmed { background-color: #0a4d68; }
+        .ride-card-body {
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
+            gap: 1.25rem;
+        }
+        .detail-item {
+            display: flex; 
+            align-items: flex-start;
+            gap: 0.85rem;
+            background-color: var(--bg-inset);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .detail-item .icon {
+            font-size: 1.25rem;
+            color: var(--primary-color);
+            width: 25px; 
+            text-align: center;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        .detail-item .text {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; 
+            word-wrap: break-word;
+        }
+        .detail-item .label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+        }
+        .detail-item .value {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            line-height: 1.4;
+        }
+        .ride-card-footer {
+            background-color: var(--bg-inset);
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        .status-info {
+            font-size: 0.9rem;
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+        .btn {
+            padding: 0.65rem 1.25rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #083b53;
+        }
+        html[data-theme="dark"] .btn-primary:hover {
+            background-color: #2a9fc3;
+        }
+        .btn-secondary {
+            background-color: var(--bg-surface);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+        .btn-secondary:hover {
+            background-color: var(--bg-page);
+        }
+        
+        .no-rides {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 28px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+
+        /* --- [FIXED CSS BLOCK] --- */
+        .slider .fa-sun, .slider .fa-moon {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            color: #fff; /* Default for moon */
+            transition: opacity 0.3s ease, color 0.3s ease;
+        }
+        .slider .fa-sun {
+            left: 6px;
+            opacity: 1;
+            color: var(--primary-color); /* Makes sun icon dark */
+        }
+        .slider .fa-moon {
+            right: 6px;
+            opacity: 0;
+        }
+        input:checked + .slider .fa-sun {
+            opacity: 0;
+        }
+        input:checked + .slider .fa-moon {
+            opacity: 1;
+        }
+        /* --- [END OF FIXED CSS BLOCK] --- */
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.open {
+            display: block;
+        }
+        
+    
+
+        /* --- [PREVIOUS RESPONSIVE CSS... NO CHANGES] --- */
+        @media (max-width: 768px) {
+            .dashboard-container {
+                flex-direction: column;
+            }
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                z-index: 1000;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+                box-shadow: 0 0 40px rgba(0,0,0,0.5);
+            }
+            .main-content {
+                padding: 1rem;
+            }
+            #menu-toggle {
+                display: block;
+            }
+            .main-header h1 {
+                font-size: 1.5rem;
+            }
+            .ride-card-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+        @media (max-width: 500px) {
+            .ride-card-body {
+                grid-template-columns: 1fr; 
+                gap: 1rem;
+            }
+            .otp-modal {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar-overlay"></div>
+
+    <div class="dashboard-container">
+        
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-route"></i>
+                <span>SharingYatra</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/driver-rides"><i class="fa-solid fa-route"></i> View Rides</a>
+                 <a href="/driver-history" class="active"><i class="fa-solid fa-history"></i> Ride History</a>
+                <a href="#"><i class="fa-solid fa-car"></i> Manage Vehicles</a>
+                <a href="#"><i class="fa-solid fa-money-bill-wave"></i> Earnings</a>
+                <a href="#"><i class="fa-solid fa-envelope"></i> Inbox</a>
+                <a href="#"><i class="fa-solid fa-bullhorn"></i> Complaint</a>
+                <a href="/driver-dashboard"><i class="fa-solid fa-user"></i> Profile</a>
+                <a href="/logout" class="logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Ride History</h1>
+                <div class="header-controls">
+                    <label class="theme-switch" title="Toggle theme">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider">
+                            <i class="fa-solid fa-sun"></i>
+                            <i class="fa-solid fa-moon"></i>
+                        </span>
+                    </label>
+                    <button id="menu-toggle" title="Open menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <% if (rides && rides.length > 0) { %>
+                <div class="ride-list">
+                    
+                    <% rides.forEach(ride => { %>
+                        <div class="ride-card">
+                            <div class="ride-card-header">
+                                <h3><%= ride.from || 'N/A' %> to <%= ride.to || 'N/A' %></h3>
+                                <span class="status status-<%= ride.status ? ride.status.toLowerCase() : 'pending' %>">
+                                    <%= ride.status || 'Pending' %>
+                                </span>
+                            </div>
+
+                            <div class="ride-card-body">
+                                <div class="detail-item">
+                                    <i class="fa-solid fa-user icon"></i>
+                                    <div class="text">
+                                        <span class="label">Customer Name</span>
+                                        <span class="value"><%= ride.customerName || 'N/A' %></span>
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fa-solid fa-phone icon"></i>
+                                    <div class="text">
+                                        <span class="label">Mobile Number</span>
+                                        <span class="value"><%= ride.mobile || 'N/A' %></span>
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fa-solid fa-map-pin icon"></i>
+                                    <div class="text">
+                                        <span class="label">Pickup Address</span>
+                                        <span class="value"><%= ride.pickupAddress || 'N/A' %></span>
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fa-solid fa-calendar-day icon"></i>
+                                    <div class="text">
+                                        <span class="label">Date</span>
+                                        <span class="value"><%= ride.date || 'N/A' %></span>
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fa-solid fa-clock icon"></i>
+                                    <div class="text">
+                                        <span class="label">Journey Time</span>
+                                        <span class="value"><%= ride.time || 'N/A' %></span>
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fa-solid fa-building icon"></i>
+                                    <div class="text">
+                                        <span class="label">Fare</span>
+                                        <span class="value">
+                                            <% if (ride.fare) { %>
+                                                <%= ride.fare %>
+                                            <% } else { %>
+                                                Not Provided
+                                            <% } %>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fa-solid fa-building icon"></i>
+                                    <div class="text">
+                                        <span class="label">email</span>
+                                        <span class="value">
+                                            <% if (ride.customerEmail) { %>
+                                                <%= ride.customerEmail %>
+                                            <% } else { %>
+                                                Not Provided
+                                            <% } %>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fa-solid fa-building icon"></i>
+                                    <div class="text">
+                                        <span class="label">Assigned Vehicles</span>
+                                        <span class="value">
+                                            <% if (ride.vehicleId && ride.vehicleId.vehicle_name) { %>
+                                                <%= ride.vehicleId.vehicle_name %>
+                                            <% } else { %>
+                                                Not Provided
+                                            <% } %>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            
+                        </div>
+                    <% }) %>
+                    </div>
+            <% } else { %>
+                <div class="no-rides">
+                    <h2>No rides found.</h2>
+                    <p>You have not been assigned any rides yet.</p>
+                </div>
+            <% } %>
+
+        </main>
+        
+    </div> 
+
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- [MOBILE SIDEBAR SCRIPT - NO CHANGES] ---
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            const sidebarOverlay = document.querySelector('.sidebar-overlay');
+            
+            if (menuToggle && sidebar && sidebarOverlay) {
+                menuToggle.addEventListener('click', () => {
+                    sidebar.classList.add('open');
+                    sidebarOverlay.classList.add('open');
+                });
+                sidebarOverlay.addEventListener('click', () => {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.remove('open');
+                });
+            }
+
+            // --- [THEME TOGGLE SCRIPT - THIS IS 100% CORRECT] ---
+            const themeToggle = document.getElementById('theme-toggle');
+            
+            if (themeToggle) {
+                // 1. On page load, check local storage for a saved theme
+                const currentTheme = localStorage.getItem('theme');
+                if (currentTheme) {
+                    // Set the <html> attribute
+                    document.documentElement.setAttribute('data-theme', currentTheme);
+                    
+                    // Sync the checkbox state
+                    if (currentTheme === 'dark') {
+                        themeToggle.checked = true;
+                    }
+                }
+
+                // 2. Add listener for when the user clicks the toggle
+                themeToggle.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        // If checked, set theme to dark
+                        document.documentElement.setAttribute('data-theme', 'dark');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        // If unchecked, set theme to light
+                        document.documentElement.setAttribute('data-theme', 'light');
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
