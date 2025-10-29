@@ -592,20 +592,27 @@
                                 </div>
                             </div>
                             
-                            <div class="ride-card-footer">
-                                <% if (ride.status === 'approved') { %>
-                                    
-                                    <button type="button" class="btn btn-primary btn-start-ride"
-                                        data-booking-id="<%= ride._id %>"
-                                        data-customer-email="<%= ride.customerEmail %>"
-                                        data-customer-name="<%= ride.customerName %>">
-                                        <i class="fa-solid fa-rocket"></i> Start Ride
-                                    </button>
-                                    
-                                <% } else { %>
-                                    <span class="status-info">This ride is <%= ride.status %>.</span>
-                                <% } %>
-                            </div>
+                           <div class="ride-card-footer">
+                            <% if (ride.status === 'approved') { %>
+                                <button type="button" class="btn btn-primary btn-start-ride"
+                                    data-booking-id="<%= ride._id %>"
+                                    data-customer-email="<%= ride.customerEmail %>"
+                                    data-customer-name="<%= ride.customerName %>">
+                                    <i class="fa-solid fa-rocket"></i> Start Ride
+                                </button>
+                                
+                            <% } else if (ride.status === 'ongoing') { %>
+                                <button type="button" class="btn btn-primary btn-start-ride"
+                                    data-booking-id="<%= ride._id %>"
+                                    data-customer-email="<%= ride.customerEmail %>"
+                                    data-customer-name="<%= ride.customerName %>">
+                                    <i class="fa-solid fa-flag-checkered"></i> Drop Customer
+                                </button>
+                                
+                            <% } else { %>
+                                <span class="status-info">This ride is <%= ride.status %>.</span>
+                            <% } %>
+                        </div>
                         </div>
                     <% }) %>
                     </div>
