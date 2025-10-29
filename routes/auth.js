@@ -8,6 +8,10 @@ const { put } = require('@vercel/blob');
 const router = express.Router();
 const nodemailer = require('nodemailer');
 const cors = require('cors');
+
+
+
+
 const Drivers = require('../models/Driver');
 const Agency = require('../models/Agency');
 const Booking = require('../models/Booking');
@@ -185,7 +189,6 @@ router.post('/start-ride', otpLimiter, async (req, res) => {
     }
 });
 
-// --- [NEW] VERIFY OTP ROUTE ---
 router.post('/verify-otp', isAuthenticated, async (req, res) => {
     console.log('Verify OTP route hit');
     try {
@@ -197,6 +200,7 @@ router.post('/verify-otp', isAuthenticated, async (req, res) => {
         }
         
         // 2. Find the booking to get the customer's email
+        // We use 'await' and store the result in a variable named 'booking'
         const booking = await Booking.findById(bookingId);
         if (!booking) {
             return res.status(404).json({ success: false, message: 'Booking not found.' });
@@ -208,7 +212,6 @@ router.post('/verify-otp', isAuthenticated, async (req, res) => {
         }
 
         // 3. Find the OTP in the database
-        // We check for both the email AND the OTP
         const savedOtp = await OTP.findOne({
             email: customerEmail,
             otp: otp
@@ -219,25 +222,51 @@ router.post('/verify-otp', isAuthenticated, async (req, res) => {
             return res.status(400).json({ success: false, message: 'Invalid or expired OTP. Please try again.' });
         }
 
-        // 5. SUCCESS! Update the ride status
-        // We set it to 'Confirmed' to match your 'status-confirmed' CSS
+        // 5. SUCCESS! Determine the new status
+        // We check the 'booking' variable that we fetched earlier
+        let newStatus = '';
+        let successMessage = '';
+
+        if (booking.status === 'approved') {
+            newStatus = 'ongoing';
+            successMessage = 'Ride Started Successfully!';
+        } else if (booking.status === 'ongoing') {
+            newStatus = 'completed';
+            successMessage = 'Ride Completed Successfully!';
+
+            // If completing, free up the vehicle capacity
+            if (booking.vehicleId) {
+                // $inc: { capacity: 1 } increments the number
+                await Vehicle.findByIdAndUpdate(booking.vehicleId, {
+                    $inc: { capacity: 1 } 
+                });
+                console.log(`Vehicle ${booking.vehicleId} capacity restored.`);
+            }
+        } else {
+            // Ride is already completed, cancelled, or pending
+            return res.status(400).json({ 
+                success: false, 
+                message: `Ride status is '${booking.status}' and cannot be updated this way.` 
+            });
+        }
+
+        // 6. Update the booking status
+        // Now we call findByIdAndUpdate *after* all the logic
         await Booking.findByIdAndUpdate(bookingId, {
-            status: 'Confirmed'
+            status: newStatus
         });
 
-        // 6. Delete the used OTP
+        // 7. Delete the used OTP
         await OTP.deleteOne({ _id: savedOtp._id });
 
-        // 7. Send success response
-        res.json({ success: true, message: 'Ride Started Successfully!' });
+        // 8. Send success response
+        res.json({ success: true, message: successMessage });
 
     } catch (err) {
         console.error('Error verifying OTP:', err);
         res.status(500).json({ success: false, message: 'Server error during OTP verification.' });
     }
 });
-
-
 // --- LOGOUT ROUTE ---
 router.get('/logout', (req, res) => {
     // ... [NO CHANGES TO THIS ROUTE] ...
