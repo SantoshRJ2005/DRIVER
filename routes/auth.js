@@ -296,4 +296,112 @@ router.get('/logout', (req, res) => {
     });
 });
 
+// This is the NEW, corrected function
+async function getDriverEarningsData(driverId, startDate, endDate) {
+    
+    const startOfDay = new Date(startDate); 
+    const endOfDay = new Date(endDate);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    // --- THIS IS THE FIX ---
+    // We must convert the session string 'driverId' into a real 'ObjectId'
+    const driverObjectId = new mongoose.Types.ObjectId(driverId);
+    // --- END OF FIX ---
+
+    try {
+        const completedBookings = await Booking.find({
+            driverID: driverObjectId, // <-- Use the new ObjectId here
+            status: 'completed',
+            $expr: {
+                $and: [
+                    {
+                        $gte: [
+                            { $dateFromString: { dateString: '$date', format: '%Y-%m-%d' } },
+                            startOfDay
+                        ]
+                    },
+                    {
+                        $lte: [
+                            { $dateFromString: { dateString: '$date', format: '%Y-%m-%d' } },
+                            endOfDay
+                        ]
+                    }
+                ]
+            }
+        });
+
+        // Calculate total earnings from the bookings found
+        let totalEarnings = 0;
+        for (const booking of completedBookings) {
+            totalEarnings += Number(booking.fare) || 0;
+        }
+        
+        // Return both the total and the list of bookings
+        return { totalEarnings, completedBookings };
+
+    } catch (err) {
+        console.error("Error during getDriverEarningsData aggregation:", err);
+        throw new Error("Failed to query driver's earnings data."); 
+    }
+}
+
+// GET /driver-earning
+// Protected by the standard driver 'isAuthenticated' middleware
+router.get('/driver-earning', isAuthenticated, async (req, res) => {
+    try {
+        const todayString = new Date().toISOString().split('T')[0];
+        const { totalEarnings, completedBookings } = await getDriverEarningsData(
+            req.session.DriversId, // Use the logged-in driver's ID
+            todayString,
+            todayString
+        );
+        res.render('driver-earning', { // Render the new EJS file
+            totalEarnings,
+            completedBookings,
+            startDate: todayString,
+            endDate: todayString,
+            error: null
+        });
+    } catch (err) {
+        res.render('driver-earning', {
+            totalEarnings: 0,
+            completedBookings: [],
+            startDate: new Date().toISOString().split('T')[0],
+            endDate: new Date().toISOString().split('T')[0],
+            error: "Could not fetch your earnings data. Please try again."
+        });
+    }
+});
+
+// POST /driver-earning
+// Protected by the standard driver 'isAuthenticated' middleware
+router.post('/driver-earning', isAuthenticated, async (req, res) => {
+    try {
+        const { startDate, endDate } = req.body;
+        if (!startDate || !endDate) {
+            return res.redirect('/driver-earning');
+        }
+        const { totalEarnings, completedBookings } = await getDriverEarningsData(
+            req.session.DriversId, // Use the logged-in driver's ID
+            startDate,
+            endDate
+        );
+        res.render('driver-earning', {
+            totalEarnings,
+            completedBookings,
+            startDate: startDate,
+            endDate: endDate,
+            error: null
+        });
+    } catch (err) {
+        res.render('driver-earning', {
+            totalEarnings: 0,
+            completedBookings: [],
+            startDate: req.body.startDate || new Date().toISOString().split('T')[0],
+            endDate: req.body.endDate || new Date().toISOString().split('T')[0],
+            error: "Could not fetch earnings for the selected date range."
+        });
+    }
+});
+
 module.exports = router;
