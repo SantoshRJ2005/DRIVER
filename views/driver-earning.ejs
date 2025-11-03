@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Earnings - SharingYatra</title> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <style>
+        /* All CSS from the previous answer remains exactly the same */
+        :root {
+            --primary-color: #0a4d68; --secondary-color: #ff6b6b; --gradient-start: #0a4d68; --gradient-end: #1a7fa3; --bg-page: #f4f7f6; --bg-surface: #ffffff; --bg-inset: #f0f4f3; --text-primary: #1a202c; --text-secondary: #555; --border-color: #e2e8f0; --shadow: 0 6px 20px rgba(0, 0, 0, 0.07); --sidebar-bg: #1e293b; --sidebar-text: #cbd5e1; --sidebar-text-hover: #ffffff; --sidebar-bg-hover: #334155; --sidebar-bg-active: var(--secondary-color); --sidebar-text-active: #ffffff;
+        }
+        html[data-theme="dark"] {
+            --primary-color: #1a7fa3; --secondary-color: #ff6b6b; --gradient-start: #1a7fa3; --gradient-end: #2a9fc3; --bg-page: #121212; --bg-surface: #1e1e1e; --bg-inset: #2c2c2c; --text-primary: #e0e0e0; --text-secondary: #a0a0a0; --border-color: #3a3a3a; --shadow: 0 6px 20px rgba(0, 0, 0, 0.2); --sidebar-bg: #1a1a1a; --sidebar-text: #a0a0a0; --sidebar-text-hover: #e0e0e0; --sidebar-bg-hover: #2c2c2c; --sidebar-bg-active: var(--secondary-color); --sidebar-text-active: #121212;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
+        body { background-color: var(--bg-page); color: var(--text-primary); }
+        .dashboard-container { display: flex; min-height: 100vh; }
+        .sidebar { width: 250px; flex-shrink: 0; background-color: var(--sidebar-bg); color: var(--sidebar-text); padding: 1.5rem; display: flex; flex-direction: column; }
+        .sidebar-header { font-size: 1.75rem; font-weight: 700; color: #fff; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem; }
+        .sidebar-header .fa-route { color: var(--secondary-color); }
+        .sidebar-nav { display: flex; flex-direction: column; flex-grow: 1; }
+        .sidebar-nav a { display: flex; align-items: center; gap: 0.75rem; color: var(--sidebar-text); text-decoration: none; padding: 0.85rem 1rem; margin-bottom: 0.5rem; border-radius: 8px; transition: background-color 0.2s, color 0.2s; }
+        .sidebar-nav a .fa-solid { width: 20px; text-align: center; }
+        .sidebar-nav a:hover { background-color: var(--sidebar-bg-hover); color: var(--sidebar-text-hover); }
+        .sidebar-nav a.active { background-color: var(--sidebar-bg-active); color: var(--sidebar-text-active); font-weight: 600; }
+        .sidebar-nav .logout { margin-top: auto; }
+        .main-content { flex-grow: 1; padding: 2rem; overflow-y: auto; }
+        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .main-header h1 { font-size: 2rem; font-weight: 700; color: var(--text-primary); }
+        .header-controls { display: flex; align-items: center; gap: 1rem; }
+        #menu-toggle { display: none; background: none; border: none; color: var(--text-primary); font-size: 1.5rem; cursor: pointer; }
+        .alert { padding: 1rem; margin-bottom: 1.5rem; border-radius: 8px; font-weight: 500; border: 1px solid transparent; }
+        .alert-error { color: #D8000C; background-color: #FFD2D2; border-color: #D8000C; }
+        .filter-form { display: flex; flex-wrap: wrap; gap: 1rem; padding: 1.5rem; background-color: var(--bg-surface); border-radius: 8px; margin-bottom: 2rem; border: 1px solid var(--border-color); box-shadow: var(--shadow); align-items: flex-end; }
+        .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .form-group label { font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); }
+        .form-group input[type="date"] { padding: 0.75rem; border: 1px solid var(--border-color); background-color: var(--bg-inset); border-radius: 6px; font-size: 1rem; color: var(--text-primary); }
+        .btn-filter { padding: 0.75rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: background-color 0.2s; }
+        .btn-filter:hover { background: var(--gradient-end); }
+        .stats-container { margin-bottom: 2rem; }
+        .stat-card { background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color: white; padding: 2rem; border-radius: 8px; box-shadow: var(--shadow); }
+        .stat-label { display: block; font-size: 1rem; font-weight: 500; opacity: 0.9; }
+        .stat-value { display: block; font-size: 2.5rem; font-weight: 700; margin: 0.5rem 0; }
+        .stat-period { display: block; font-size: 0.875rem; opacity: 0.8; }
+        .main-content h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-primary); }
+        .table-container { background-color: var(--bg-surface); border-radius: 8px; box-shadow: var(--shadow); border: 1px solid var(--border-color); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 1rem 1.25rem; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; }
+        td { color: var(--text-primary); font-size: 1rem; }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background-color: var(--bg-inset); }
+        .no-data { text-align: center; padding: 2rem; color: var(--text-secondary); font-style: italic; }
+        .theme-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .theme-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 28px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(22px); }
+        .slider .fa-sun, .slider .fa-moon { position: absolute; top: 50%; transform: translateY(-50%); font-size: 14px; color: #fff; transition: opacity 0.3s ease; }
+        .slider .fa-sun { left: 6px; opacity: 1; }
+        .slider .fa-moon { right: 6px; opacity: 0; }
+        input:checked + .slider .fa-sun { opacity: 0; }
+        input:checked + .slider .fa-moon { opacity: 1; }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999; backdrop-filter: blur(2px); }
+        .sidebar-overlay.open { display: block; }
+        @media (max-width: 768px) {
+            .dashboard-container { flex-direction: column; }
+            .sidebar { position: fixed; left: 0; top: 0; height: 100vh; z-index: 1000; transform: translateX(-100%); transition: transform 0.3s ease-in-out; }
+            .sidebar.open { transform: translateX(0); box-shadow: 0 0 40px rgba(0,0,0,0.5); }
+            .main-content { padding: 1rem; }
+            #menu-toggle { display: block; }
+            .main-header h1 { font-size: 1.5rem; }
+            .filter-form { padding: 1rem; }
+            .form-group { width: 100%; }
+            .btn-filter { width: 100%; justify-content: center; }
+            .stat-card { padding: 1.5rem; }
+            .stat-value { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar-overlay"></div>
+    <div class="dashboard-container">
+        
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-route"></i>
+                <span>SharingYatra</span>
+            </div>
+            <nav class="sidebar-nav">
+               
+                <a href="/driver-rides"><i class="fa-solid fa-route"></i> View Rides</a>
+                <a href="/driver-history" ><i class="fa-solid fa-history"></i> Ride History</a>
+                <a href="/driver-earning" class="active"><i class="fa-solid fa-money-bill-wave"></i> Earnings</a>
+                <a href="/driver-dashboard"><i class="fa-solid fa-user"></i> Profile</a>
+                <a href='/logout' class="logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button id="menu-toggle" aria-label="Open sidebar">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <h1>My Earnings</h1>
+                </div>
+                <div class="header-controls">
+                    <label class="theme-switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider">
+                            <i class="fa-solid fa-sun"></i>
+                            <i class="fa-solid fa-moon"></i>
+                        </span>
+                    </label>
+                </div>
+            </header>
+            
+            <div class="main">
+                
+                <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="alert alert-error"><%= error %></div>
+                <% } %>
+            
+                <form class="filter-form" action="/driver-earning" method="POST">
+                    <div class="form-group">
+                        <label for="startDate">From Date</label>
+                        <input type="date" id="startDate" name="startDate" value="<%= startDate %>" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">To Date</label>
+                        <input type="date" id="endDate" name="endDate" value="<%= endDate %>" required>
+                    </div>
+                    <button type="submit" class="btn-filter">
+                        <i class="fa-solid fa-filter"></i> Filter Range
+                    </button>
+                </form>
+            
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <span class="stat-label">My Total Completed Earnings</span>
+                        <span class="stat-value">₹<%= totalEarnings.toFixed(2) %></span>
+                        <span class="stat-period">Displaying for: <%= startDate %> to <%= endDate %></span>
+                    </div>
+                </div>
+            
+                <h2>My Completed Rides</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Customer Name</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Date</th>
+                                 <th>Fare</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (completedBookings && completedBookings.length > 0) { %>
+                                <% completedBookings.forEach(booking => { %>
+                                    <tr>
+                                        <td><%= booking.bookingId %></td>
+                                        <td><%= booking.customerName %></td>
+                                        <td><%= booking.from %></td>
+                                        <td><%= booking.to %></td>
+                                        <td><%= booking.date %></td>
+                                         <td><%= booking.fare %></td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="5" class="no-data">
+                                        No completed rides found for this period.
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // JavaScript for sidebar and theme toggle (same as before)
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+        
+            function closeSidebar() {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('open');
+            }
+        
+            if (menuToggle && sidebar && overlay) {
+                menuToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('open');
+                    overlay.classList.toggle('open');
+                });
+        
+                overlay.addEventListener('click', closeSidebar);
+            }
+        
+            const themeToggle = document.getElementById('theme-toggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('change', () => {
+                    if (themeToggle.checked) {
+                        document.documentElement.setAttribute('data-theme', 'dark');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        document.documentElement.setAttribute('data-theme', 'light');
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
+        
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                if (savedTheme === 'dark') {
+                    themeToggle.checked = true;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
