@@ -1,7 +1,7 @@
 // --- IMPORTS ---
 const express = require('express');
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+//const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const path = require('path');
 const { put } = require('@vercel/blob');
@@ -74,14 +74,14 @@ router.post('/driver-login', async (req, res) => {
         if (!user) {
             return res.render('login', { message: 'Invalid Credentials' });
         }
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = (password === user.password);
         if (!isMatch) {
             return res.render('login', { message: 'Invalid Credentials' });
         }
         req.session.DriversId = user._id;
         req.session.DriverName = user.fullName || 'NA';
         req.session.DriverEmail = user.email;
-        res.redirect('/driver-dashboard');
+        res.redirect('/driver-rides');
     } catch (err) {
         console.error(err);
         res.render('login', { message: 'Server Error', err: err });
