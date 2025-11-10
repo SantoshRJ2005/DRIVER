@@ -109,10 +109,13 @@ router.get('/driver-rides', isAuthenticated, async (req, res) => {
     try {
         console.log('Logged-in Driver ID:', req.session.DriversId);
         const driverObjectId = new mongoose.Types.ObjectId(req.session.DriversId);
-        let allRides = await Booking.find({ driverID: driverObjectId , status: { $ne: "completed" }})
-            .populate('agencyId', 'agencyName')
-            .populate('vehicleId','vehicle_name')
-            .sort({ createdAt: -1 });
+      let allRides = await Booking.find({
+  driverID: driverObjectId,
+  status: { $nin: ["completed", "cancelled"] }   // excludes both
+})
+.populate('agencyId', 'agencyName')
+.populate('vehicleId', 'vehicle_name')
+.sort({ createdAt: -1 });
         console.log('Rides found in database:', allRides.length); 
         res.render('driver-rides', { rides: allRides });
     } catch (err) {
