@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const bookingSchema = new mongoose.Schema({
+     bookingId: { type: String, required: true, unique: true },
     customerName: { type: String },
     customerEmail: { type: String },
     mobile: { type: String },
@@ -21,5 +22,6 @@ const bookingSchema = new mongoose.Schema({
     fare: { type: String }
     
 }, { timestamps: true });
+
 
 module.exports = mongoose.model("Booking", bookingSchema);
